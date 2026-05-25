@@ -10,6 +10,7 @@ Usage:
   start-session --list                 # show all scheduled pings
   start-session --remove               # remove all scheduled pings
   start-session --remove mon           # remove ping for specific day(s)
+  start-session --log                  # show ping history
 """
 
 import subprocess
@@ -19,6 +20,7 @@ from datetime import datetime
 from pathlib import Path
 
 SCRIPT_PATH = str(Path(__file__).resolve())
+LOG_FILE = Path.home() / ".claude-ping.log"
 
 DAYS = {
     "sun": 0, "sunday": 0,
@@ -33,13 +35,24 @@ DAYS = {
 DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 
+def log(status: str):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(LOG_FILE, "a") as f:
+        f.write(f"{timestamp}  {status}\n")
+
+
 def ping_claude():
     print(f"Starting Claude session at {datetime.now()}...")
-    subprocess.run(
+    result = subprocess.run(
         ["claude", "-p", "Session start", "--output-format", "text"],
         stderr=subprocess.DEVNULL,
     )
-    print(f"Session activated at {datetime.now().strftime('%H:%M:%S')}")
+    if result.returncode == 0:
+        print(f"Session activated at {datetime.now().strftime('%H:%M:%S')}")
+        log("OK")
+    else:
+        print(f"Ping failed (exit code {result.returncode})")
+        log(f"FAILED (exit {result.returncode})")
 
 
 def get_crontab() -> list[str]:
@@ -144,6 +157,9 @@ def main():
 
     if not args:
         ping_claude()
+
+    elif args[0] == "--log":
+        print(LOG_FILE.read_text() if LOG_FILE.exists() else "No pings logged yet.")
 
     elif args[0] == "--list":
         list_schedules()
