@@ -3,7 +3,7 @@ set -e
 
 INSTALL_DIR="/usr/local/bin"
 SCRIPT_NAME="start-session"
-REPO="carlos_emergency/Claude-Ping"
+REPO="LaGrandma/Claude-Ping"
 RAW_URL="https://raw.githubusercontent.com/${REPO}/main/start-session.py"
 
 echo "Installing ${SCRIPT_NAME}..."
